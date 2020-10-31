@@ -31,11 +31,12 @@ def main():
             # Step 1: Sample a joint distribution before intervention
             pi_A_1 = np.random.dirichlet(np.ones(N))
             pi_B_A = np.random.dirichlet(np.ones(N), size=N)
+            pi_C_B = np.random.dirichlet(np.ones(N), size=N)
             
             transfers = tnrange(num_transfer, leave=False)
             for k in transfers:
                 # Step 2: Train the modules on the training distribution
-                model.set_ground_truth(pi_A_1, pi_B_A)
+                model.set_ground_truth(pi_A_1, pi_B_A, pi_C_B)
                 # Step 3: Sample a joint distribution after intervention
                 pi_A_2 = np.random.dirichlet(np.ones(N))
 
@@ -44,12 +45,17 @@ def main():
                 model.zero_grad()
                 loss = torch.tensor(0., dtype=torch.float64)
                 for _ in range(num_gradient_steps):
-                    x_train = torch.from_numpy(generate_data_categorical(transfer_batch_size, pi_A_2, pi_B_A))
+                    x_train = torch.from_numpy(generate_data_categorical(transfer_batch_size, pi_A_2, pi_B_A, pi_C_B))
                     loss += -torch.mean(model(x_train))
                     optimizer.zero_grad()
                     inner_loss_A_B = -torch.mean(model.model_A_B(x_train))
                     inner_loss_B_A = -torch.mean(model.model_B_A(x_train))
-                    inner_loss = inner_loss_A_B + inner_loss_B_A
+                    inner_loss_B_C = -torch.mean(model.model_B_C(x_train))
+                    inner_loss_C_B = -torch.mean(model.model_C_B(x_train))
+                    inner_loss_A_C = -torch.mean(model.model_A_C(x_train))
+                    inner_loss_C_A = -torch.mean(model.model_C_A(x_train))
+                    
+                    inner_loss = inner_loss_A_B + inner_loss_B_A + inner_loss_C_B + inner_loss_B_C + inner_loss_A_C + inner_loss_C_A
                     inner_loss.backward()
                     optimizer.step()
 

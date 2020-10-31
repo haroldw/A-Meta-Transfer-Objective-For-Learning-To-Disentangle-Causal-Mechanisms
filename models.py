@@ -62,6 +62,11 @@ class StructuralModel(BinaryStructuralModel):
     def __init__(self, N, dtype=None):
         model_A_B = Model1(N, dtype=dtype)
         model_B_A = Model2(N, dtype=dtype)
+        model_B_C = Model1(N, dtype=dtype)
+        model_C_B = Model2(N, dtype=dtype)
+        model_A_C = Model1(N, dtype=dtype)
+        model_C_A = Model2(N, dtype=dtype)
+        
         super(StructuralModel, self).__init__(model_A_B, model_B_A)
         self.w = nn.Parameter(torch.tensor(0., dtype=dtype))
     

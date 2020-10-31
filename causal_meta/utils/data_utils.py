@@ -50,22 +50,26 @@ class RandomSplineSCM(nn.Module):
             plt.ylabel("Y")
             plt.show()
 
-def generate_data_categorical(num_samples, pi_A, pi_B_A):
+def generate_data_categorical(num_samples, pi_A, pi_B_A, pi_C_B):
     """Sample data using ancestral sampling
     
     x_A ~ Categorical(pi_A)
     x_B ~ Categorical(pi_B_A[x_A])
+    x_C ~ Categorical(pi_C_B[x_B])
     """
     N = pi_A.shape[0]
     r = np.arange(N)
     
     x_A = np.dot(np.random.multinomial(1, pi_A, size=num_samples), r)
     x_Bs = np.zeros((num_samples, N), dtype=np.int64)
+    x_Cs = np.zeros((num_samples, N), dtype=np.int64)
     for i in range(num_samples):
         x_Bs[i] = np.random.multinomial(1, pi_B_A[x_A[i]], size=1)
+        x_Cs[i] = np.random.multinomial(1, pi_C_B[x_B[i]], size=1)
     x_B = np.dot(x_Bs, r)
+    x_C = np.dot(x_Cs, r)
     
-    return np.vstack((x_A, x_B)).T.astype(np.int64)
+    return np.vstack((x_A, x_B, x_C)).T.astype(np.int64)
 
 def generate_data_multivariate_normal(num_samples, mean_A, cov_A, beta_0, beta_1, cov_B_A):
     """ Sample data using ancestral sampling
